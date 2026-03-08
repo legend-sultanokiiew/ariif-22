@@ -2,10 +2,10 @@
   "language": "en",
   "DeveloperMode": false,
   "autoCreateDB": true,
-  "BOTNAME": "ARIF BABU 😉❤️",
-  "PREFIX": "#",
+  "BOTNAME": "WASEEM KA BOT 🎧🌚",
+  "PREFIX": "*",
 
-  "ADMINBOT": ["61572870433256"],
+  "ADMINBOT": ["61584895975613","61579856075641"],
   "NDH": ["61572870433256"],
 
   "adminOnly": false,
