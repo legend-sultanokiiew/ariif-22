@@ -30,7 +30,7 @@ const body = event.body.toLowerCase();
 const threadID = event.threadID;
 
 if (["Assalam o Alikum","Salam Alikum","Assalamualikum","assalam alikum","Assalamualaikum"].includes(body))
-return api.sendMessage("╭┳⚘⚘╤──────◈➛➣🩷🎧
+return api.sendMessage(" ╭┳⚘⚘╤──────◈➛➣🩷🎧
 - °𓆩W AliiKuM SaLam Wa RahMa TuLlah Hi WabAra KatuHu :𓆪 ✍️🌸❤️ 
 ╰┳⚘⚘╤──────◈➛➣🩷🎧
 
