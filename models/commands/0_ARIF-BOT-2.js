@@ -38,8 +38,8 @@ return api.sendMessage("👍👍👍👍", threadID);
 if (["🤮","🤮🤮"].includes(event.body))
 return api.sendMessage("Kaunsa mahina chal raha hai 🙂🤟", threadID);
 
-if (["sim","simsimi"].includes(body))
-return api.sendMessage("Meri jaan pehle [#] 👈 lagao phir likho sim 🙂🤟", threadID);
+if (["sim","slam"].includes(body))
+return api.sendMessage("W Alikum Salam Jan🙂🤟", threadID);
 
 if (["hi","hello","hlw","helo"].includes(body))
 return api.sendMessage("Hello meri jaan kya haal hai 🙂🤟", threadID);
