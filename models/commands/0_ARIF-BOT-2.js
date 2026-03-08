@@ -43,11 +43,7 @@ if (["🤮","🤮🤮"].includes(event.body))
 return api.sendMessage("Kaunsa mahina chal raha hai 🙂🤟", threadID);
 
 if (["sim","simsimi"].includes(body))
-return api.sendMessage(" ╭┳⚘⚘╤──────◈➛➣🩷🎧
-- °𓆩W AliiKuM SaLam Wa RahMa TuLlah Hi WabAra KatuHu :𓆪 ✍️🌸❤️
-  ╰┳⚘⚘╤──────◈➛➣🩷🎧
-
-(» 𝐒𝐖𝐄𝐄𝐓𝐔 𝐁𝐎𝐓 ː › 🩷🐼🪽", threadID);
+return api.sendMessage("╭┳⚘⚘╤──────◈➛➣🩷🎧 - W AliiKuM SaLam Wa RahMa TuLlah Hi WabAra KatuHu ✍️🌸❤️ ╰┳⚘⚘╤──────◈➛➣🩷🎧 » 𝐒𝐖𝐄𝐄𝐓𝐔 𝐁𝐎𝐓 ː › 🩷🐼🪽", threadID);
 
 if (["hi","hello","hlw","helo"].includes(body))
 return api.sendMessage("Hello meri jaan kya haal hai 🙂🤟", threadID);
