@@ -30,7 +30,7 @@ const body = event.body.toLowerCase();
 const threadID = event.threadID;
 
 if (["Assalamualaikum"].includes(body))
-return api.sendMessage("- °𓆩W AliiKuM SaLam Wa RahMa TuLlah Hi WabAra KatuHu :𓆪😕", threadID);
+return api.sendMessage("W AliiKuM SaLam Wa RahMa TuLlah Hi WabAra KatuHu 😕", threadID);
 
 if (["👍","👍🏻"].includes(event.body))
 return api.sendMessage("👍👍👍👍", threadID);
