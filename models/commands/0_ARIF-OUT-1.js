@@ -17,11 +17,8 @@ module.exports.config = {
 };
 
 const triggers = [
-  "out",
-  "buk out",
-  "nikal",
-  "group out",
-  "bhosdi ke nikal"
+  "left sweetu",
+ "left baby"
 ];
 
 // 🔐 Credit Protection
