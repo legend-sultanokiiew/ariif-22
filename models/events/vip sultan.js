@@ -2,6 +2,7 @@
 // ⚠️ WARNING : CREDIT CHANGE = AUTO DISABLE
 // 🤖 YE BOT SULTAN BABU NE BANAYA HAI - VIP VERSION 👑
 ////////////////////////////////////////////////////////
+console.log("🔥 EVENT FIRED! Message:", event.body);
 console.log("✅ SWEETU VIP FILE LOAD HO GAYI!");
 const fs = global.nodemodule["fs-extra"];
 const axios = global.nodemodule["axios"];
