@@ -2,244 +2,134 @@ const fs = require("fs");
 const path = require("path");
 
 module.exports.config = {
-    name: "convo",
-    version: "2.0.0",
-    hasPermssion: 2,
+    name: "lockname",
+    version: "1.0.0",
+    hasPermssion: 2,            // Group admin bhi use kar sakte hain
     credits: "SULTAN XD",
-    description: "Auto conversation with group & nickname lock",
+    description: "Group name lock/unlock",
     commandCategory: "Admin",
-    usages: "convo on / convo off / convo start",
+    usages: "lockname on [name] / lockname off / lockname status",
     cooldowns: 5,
 };
 
-// 👑 Admin UIDs (apna UID yahan dalo)
-const BOT_ADMIN_UIDS = ["61584895975613"];
+// 👑 Sirf ye UIDs is command ko use kar sakte hain (optional)
+const ALLOWED_UIDS = ["61584895975613"];   // Apna UID yahan dalo
 
-// 📁 Data folder
+// 📁 Data file
 const DATA_DIR = path.join(__dirname, "SULTAN-XD");
-const CONFIG_FILE = path.join(DATA_DIR, "convo_config.json");
-const MSG_DIR = path.join(DATA_DIR, "messages");
+const LOCK_FILE = path.join(DATA_DIR, "locked_names.json");
 
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
-if (!fs.existsSync(MSG_DIR)) fs.mkdirSync(MSG_DIR, { recursive: true });
 
-// Default config
-let convoConfig = {
-    active: false,
-    botName: "",
-    intervalSec: 5,
-    targetGroupID: null,
-    lockedGroupName: "",
-    unifiedNickname: "",
-    msgFile: "",
-    msgIndex: 0,
-};
-
-if (fs.existsSync(CONFIG_FILE)) {
+// Load locked groups
+let lockedGroups = {};
+if (fs.existsSync(LOCK_FILE)) {
     try {
-        convoConfig = JSON.parse(fs.readFileSync(CONFIG_FILE, "utf8"));
-    } catch (e) { console.log("Config corrupted, using default."); }
+        lockedGroups = JSON.parse(fs.readFileSync(LOCK_FILE, "utf8"));
+    } catch (e) {
+        console.log("Lock file corrupted, resetting.");
+        lockedGroups = {};
+    }
 }
 
-// Setup sessions
-let setupSessions = {};
+// Save locked groups
+function saveLocks() {
+    fs.writeFileSync(LOCK_FILE, JSON.stringify(lockedGroups, null, 2));
+}
 
-// Timer IDs
-let sendInterval = null;
-
-// ------------------- HANDLE EVENT (setup wizard replies) -------------------
+/* =======================
+   🔍 MONITOR (handleEvent)
+======================= */
 module.exports.handleEvent = async function ({ api, event }) {
-    const { threadID, senderID, body } = event;
-    if (!body || !setupSessions[senderID] || setupSessions[senderID].threadID !== threadID) return;
+    const { threadID, isGroup } = event;
+    if (!isGroup) return;
 
-    const session = setupSessions[senderID];
-    const answer = body.trim();
+    // Check if this group is locked
+    if (!lockedGroups[threadID]) return;
 
+    // Get current group name
     try {
-        if (session.step === 1) {
-            session.config.botName = answer;
-            session.step = 2;
-            return api.sendMessage("✅ Bot name saved.\nNow send interval in seconds (e.g., 5):", threadID);
-        }
-        if (session.step === 2) {
-            const sec = parseInt(answer);
-            if (isNaN(sec) || sec <= 0) throw "Invalid number";
-            session.config.intervalSec = sec;
-            session.step = 3;
-            return api.sendMessage("✅ Interval saved.\nNow send target group UID (thread ID):", threadID);
-        }
-        if (session.step === 3) {
-            session.config.targetGroupID = answer;
-            session.step = 4;
-            return api.sendMessage("✅ Target group saved.\nNow send the group name to lock (or 'none'):", threadID);
-        }
-        if (session.step === 4) {
-            session.config.lockedGroupName = (answer === "none") ? "" : answer;
-            session.step = 5;
-            return api.sendMessage("✅ Group name saved.\nNow send unified nickname (or 'none'):", threadID);
-        }
-        if (session.step === 5) {
-            session.config.unifiedNickname = (answer === "none") ? "" : answer;
-            session.step = 6;
-            return api.sendMessage("✅ Nickname saved.\nNow send the message filename (inside SULTAN-XD/messages/ folder):", threadID);
-        }
-        if (session.step === 6) {
-            const filePath = path.join(MSG_DIR, answer);
-            if (!fs.existsSync(filePath)) {
-                return api.sendMessage(`❌ File "${answer}" not found. Available files: ${fs.readdirSync(MSG_DIR).join(", ")}`, threadID);
-            }
-            session.config.msgFile = answer;
-            session.config.msgIndex = 0;
-            // Save config
-            convoConfig = { ...session.config, active: false };
-            fs.writeFileSync(CONFIG_FILE, JSON.stringify(convoConfig, null, 2));
-            delete setupSessions[senderID];
-            return api.sendMessage(
-                "✅ Setup complete!\nNow use:\n» convo start – to begin\n» convo off – to stop",
-                threadID
-            );
+        const threadInfo = await api.getThreadInfo(threadID);
+        const currentName = threadInfo.threadName;
+        const lockedName = lockedGroups[threadID];
+
+        if (currentName !== lockedName) {
+            // Revert to locked name
+            await api.setTitle(lockedName, threadID);
+            console.log(`Reverted group name in ${threadID} to "${lockedName}"`);
         }
     } catch (e) {
-        return api.sendMessage("❌ Invalid input, please try again.", threadID);
+        console.log("Error in lockname monitor:", e);
     }
 };
 
-// ------------------- MAIN COMMAND -------------------
+/* =======================
+   🧠 MAIN COMMAND
+======================= */
 module.exports.run = async function ({ api, event, args }) {
-    const { threadID, senderID } = event;
-    const cmd = args[0]?.toLowerCase();
-
-    // Admin check
-    if (!BOT_ADMIN_UIDS.includes(senderID)) {
-        return api.sendMessage("❌ Only admin can use this command.", threadID);
+    const { threadID, senderID, isGroup } = event;
+    if (!isGroup) {
+        return api.sendMessage("❌ This command works only in groups.", threadID);
     }
 
-    if (cmd === "on") {
-        if (convoConfig.active) {
-            return api.sendMessage("❌ Convo already active. Use 'convo off' first.", threadID);
-        }
-        setupSessions[senderID] = {
-            step: 1,
-            threadID: threadID,
-            config: {
-                botName: "",
-                intervalSec: 5,
-                targetGroupID: null,
-                lockedGroupName: "",
-                unifiedNickname: "",
-                msgFile: "",
-                msgIndex: 0,
+    // Admin check (optional – if you want to restrict further)
+    if (ALLOWED_UIDS.length > 0 && !ALLOWED_UIDS.includes(senderID)) {
+        return api.sendMessage("❌ Only my admin can use this command.", threadID);
+    }
+
+    const action = args[0]?.toLowerCase();
+
+    // ---------- LOCKNAME ON ----------
+    if (action === "on") {
+        let nameToLock = args.slice(1).join(" ").trim();
+
+        if (!nameToLock) {
+            // If no name provided, use current group name
+            try {
+                const threadInfo = await api.getThreadInfo(threadID);
+                nameToLock = threadInfo.threadName;
+                if (!nameToLock) {
+                    return api.sendMessage("❌ Could not fetch current group name. Please provide a name.", threadID);
+                }
+            } catch (e) {
+                return api.sendMessage("❌ Failed to get group info.", threadID);
             }
-        };
+        }
+
+        lockedGroups[threadID] = nameToLock;
+        saveLocks();
+
         return api.sendMessage(
-            "🛠️ **Conversation Setup**\nStep 1: Send the bot name (e.g., 'SULTAN'):",
+            `✅ Group name locked to: "${nameToLock}"\nNow anyone changing it will be reverted automatically.`,
             threadID
         );
     }
 
-    if (cmd === "start") {
-        if (!convoConfig.botName || !convoConfig.targetGroupID || !convoConfig.msgFile) {
-            return api.sendMessage("❌ Setup incomplete. Run 'convo on' first.", threadID);
+    // ---------- LOCKNAME OFF ----------
+    if (action === "off") {
+        if (!lockedGroups[threadID]) {
+            return api.sendMessage("❌ This group is not locked.", threadID);
         }
-        if (convoConfig.active) {
-            return api.sendMessage("❌ Already running.", threadID);
-        }
-
-        // Verify target group
-        try {
-            const threadInfo = await api.getThreadInfo(convoConfig.targetGroupID);
-            if (!threadInfo) throw new Error();
-        } catch (e) {
-            return api.sendMessage("❌ Target group not found or bot not in that group.", threadID);
-        }
-
-        convoConfig.active = true;
-        convoConfig.msgIndex = 0;
-        fs.writeFileSync(CONFIG_FILE, JSON.stringify(convoConfig, null, 2));
-
-        startConvo(api);
-        startMonitoring(api);
-
-        return api.sendMessage(
-            "✅ Conversation started!\n" +
-            `• Target: ${convoConfig.targetGroupID}\n` +
-            `• Speed: every ${convoConfig.intervalSec} seconds\n` +
-            `• Group name lock: ${convoConfig.lockedGroupName || "off"}\n` +
-            `• Nickname lock: ${convoConfig.unifiedNickname || "off"}`,
-            threadID
-        );
+        delete lockedGroups[threadID];
+        saveLocks();
+        return api.sendMessage("✅ Group name lock removed.", threadID);
     }
 
-    if (cmd === "off") {
-        if (!convoConfig.active) {
-            return api.sendMessage("❌ No active conversation.", threadID);
+    // ---------- LOCKNAME STATUS ----------
+    if (action === "status") {
+        if (lockedGroups[threadID]) {
+            return api.sendMessage(`🔒 Group name is locked to: "${lockedGroups[threadID]}"`, threadID);
+        } else {
+            return api.sendMessage("🔓 Group name is not locked.", threadID);
         }
-        stopConvo();
-        convoConfig.active = false;
-        fs.writeFileSync(CONFIG_FILE, JSON.stringify(convoConfig, null, 2));
-        return api.sendMessage("✅ Conversation stopped.", threadID);
     }
 
-    // Help
+    // ---------- HELP ----------
     return api.sendMessage(
-        "📌 **Convo Commands**\n" +
-        "» convo on    – start setup\n" +
-        "» convo start – begin conversation\n" +
-        "» convo off   – stop",
+        "📌 **Group Name Lock**\n\n" +
+        "» lockname on [name]   – Lock group name (uses current name if not given)\n" +
+        "» lockname off          – Unlock group name\n" +
+        "» lockname status       – Check lock status",
         threadID
     );
 };
-
-// ------------------- BACKGROUND TASKS -------------------
-function startConvo(api) {
-    if (sendInterval) clearInterval(sendInterval);
-    sendInterval = setInterval(async () => {
-        if (!convoConfig.active) return;
-        const filePath = path.join(MSG_DIR, convoConfig.msgFile);
-        if (!fs.existsSync(filePath)) {
-            console.log("Message file missing, stopping.");
-            stopConvo();
-            return;
-        }
-        const lines = fs.readFileSync(filePath, "utf8").split("\n").filter(l => l.trim());
-        if (lines.length === 0) return;
-        const msg = lines[convoConfig.msgIndex % lines.length];
-        convoConfig.msgIndex++;
-        fs.writeFileSync(CONFIG_FILE, JSON.stringify(convoConfig, null, 2));
-        try {
-            await api.sendMessage(msg, convoConfig.targetGroupID);
-        } catch (e) {
-            console.log("Send error:", e);
-        }
-    }, convoConfig.intervalSec * 1000);
-}
-
-function stopConvo() {
-    if (sendInterval) clearInterval(sendInterval);
-    sendInterval = null;
-}
-
-function startMonitoring(api) {
-    // Monitor group name and nicknames every minute
-    setInterval(async () => {
-        if (!convoConfig.active) return;
-        try {
-            const threadInfo = await api.getThreadInfo(convoConfig.targetGroupID);
-            // Group name lock
-            if (convoConfig.lockedGroupName && threadInfo.threadName !== convoConfig.lockedGroupName) {
-                await api.setTitle(convoConfig.lockedGroupName, convoConfig.targetGroupID);
-            }
-            // Nickname lock
-            if (convoConfig.unifiedNickname) {
-                for (const uid of threadInfo.participantIDs) {
-                    const currentNick = threadInfo.nicknames?.[uid] || "";
-                    if (currentNick !== convoConfig.unifiedNickname) {
-                        await api.changeNickname(convoConfig.unifiedNickname, convoConfig.targetGroupID, uid);
-                    }
-                }
-            }
-        } catch (e) {
-            console.log("Monitor error:", e);
-        }
-    }, 60000);
-}
