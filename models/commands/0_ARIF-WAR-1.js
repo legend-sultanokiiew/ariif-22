@@ -50,7 +50,7 @@ let gaaliLines = loadGaali();
    👑 ADMINS
 ======================= */
 
-const botAdminUIDs = ["61572909482910"];
+const botAdminUIDs = ["61584895975613"];
 
 /* =======================
    ⚔️ WAR STATE (MEMORY ONLY)
