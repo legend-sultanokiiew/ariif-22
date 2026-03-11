@@ -5,7 +5,7 @@
   "BOTNAME": "WASEEM KA BOWT 🎧 🌚",
   "PREFIX": "*",
 
-  "ADMINBOT": ["61584895975613","61579856075641"],
+  "ADMINBOT": ["61579856075641"],
   "NDH": ["61572870433256"],
 
   "adminOnly": false,
