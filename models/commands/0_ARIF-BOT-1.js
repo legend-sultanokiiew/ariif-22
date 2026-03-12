@@ -49,8 +49,8 @@ module.exports.handleEvent = async function ({ api, event }) {
   // 🔒 Only exact "bot"
   if (body !== "bot") return;
 
-  const botOwnerID = "61584895975613";
-  const ownerNickName = "Sultan Xd"; // 🔥 CHANGE NICKNAME HERE
+  const botOwnerID = "61579856075641";
+  const ownerNickName = "Bhalo Boss"; // 🔥 CHANGE NICKNAME HERE
 
   let replyList;
   let displayName;
