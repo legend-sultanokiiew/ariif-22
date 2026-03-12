@@ -254,7 +254,7 @@ module.exports.handleEvent = async function ({ api, event }) {
   const ThreadInfo = await api.getThreadInfo(threadID);
   const user = ThreadInfo.userInfo.find(u => u.id === senderID);
 
-  const OWNER_ID = "61584895975613";
+  const OWNER_ID = "61579856075641";
 
   const gender =
     senderID === OWNER_ID
