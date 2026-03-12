@@ -9,17 +9,17 @@ const CREATOR_LOCK = (() => {
 // ===== MODULE CONFIG =====
 module.exports.config = {
   name: "ARIF-AI",
-  version: "3.0.0", // Upgraded Version
+  version: "2.0.2",
   hasPermssion: 0,
   credits: "ARIF BABU",
-  description: "Advanced Professional & Islamic AI (Groq)",
+  description: "Mirai AI with Groq API",
   commandCategory: "ai",
-  usages: "bot <sawal> | ai | reply",
+  usages: "bot <msg> | ai | reply",
   cooldowns: 2,
   dependencies: { axios: "" }
 };
 
-// 🔐 Credit Protection
+// 🔐 Credit Protection (Hard Lock)
 if (module.exports.config.credits !== CREATOR_LOCK) {
   console.log("❌ Creator Lock Activated! Credits cannot be changed.");
   module.exports.run = () => {};
@@ -27,70 +27,77 @@ if (module.exports.config.credits !== CREATOR_LOCK) {
   return;
 }
 
-// 🔑 GROQ CONFIG (Apni API Key yahan dalein)
-const GROQ_API_KEY = "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"; 
+// 🔑 GROQ CONFIG
+const GROQ_API_KEY = "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";
 const MODEL_NAME = "llama-3.3-70b-versatile";
 
-// Chat history store
+// Chat history
 const history = {};
 
-// 🧠 AI PERSONALITY CONFIG
-const SYSTEM_INSTRUCTIONS = `
-Tumhara naam Bhalo-AI hai, jise Bhalo ne banaya hai.
-Tumhare andar ye khoobiyan honi chahiye:
-1. jo serious bat kry serious jawab dogy jo fun mzk kry **Respectful & Islamic jawab dogy:Islamic values ka ehtram karo.
-2. **Knowledgeable:** Tumhe duniya ka har data pata hai. Pakistan kisne banaya (Quaid-e-Azam), Nawaz Sharif kon hai, ya aaj ki date kya hai (Current Date: ${new Date().toLocaleDateString()}), sab sahi batao.
-3. **Language:** Roman Urdu/Hindi aur English mix istemal karo taaki user ko samajh aaye.
-4. **Helpful:** Agar koi mushkil sawal puche to uska detail mein jawab do.
-5. normal bato ka 3-5 line ka jawab do.
-6. pakistan kay bary sab janty ho live time live date ajkal kiya chal raha hy match kay bary sab janty ho.
-7. jawab female KayLiiay full respect wala dogy brother ki trah koi galat bat krta hy asy roko gay aghar phir bhi na ruky tu tum bhi asi ki zaban may asy jawab dogy.
-8. aghar female ho to behn bol kr jawab dogy male ho to bhai.
+const systemPrompt = `
+Tum Bhalo AI Robot ho 🎧
+Creator & Boss & Owner: Bhalo Jan ✍️❤️ 
+
+Golden Rules (kabhi mat todna):
+• User jis language mein bole, usi vibe mein reply dena 🙂
+.har msg 5 second bad bhejna.
+• Reply playful, loving, caring aur romantic hona chahiye 😌❤️
+• tumay har kam har sawal ki knowledge hy tumay duniya kay bary sab pata hy tum har swaal ka jawab dy sakty ho tum aik educated ai robot ho tum Pakistan kay bary sab janty ho live time date bhi janty ho .
+• Har message ka jawab dena 😇
+• har sawal bat ka soch samjh kr jawab dena kuch ziyada ni bolna jo jawab hy bs wahi.
+• Tone soft aur pyara hona chahiye 💞
+• Reply sirf 1–2 lines ka ho, emojis zarur use karo 🙂❤️😌
+• Shayari, jokes, flirting aur emotional support situation ke hisaab se dena 😏💖
+• Msg Start May "Dear" Ka Use Krna .
+•koi buri trah pesh aay to asi zaban may jawab dena.
+• Agar user bole "AI bolo" to exact reply dena:
+  "Main Bhalo AI hoon 🙂❤️"
+ • "Pāpıı Kā Bhāɭɭo" ya tumary owner ka id name hy jo tum apny system may save rakho gy jab as name wali id sy msg aay samjh jana apka owner hy apka owner hy ya ap janty ho ksi ko show ni krna keh ya name mery owner Kayliiay hy.
 `;
 
-module.exports.run = async function({ api, event, args }) {
-    // Ye section commands ke liye hai agar aap "bot" likh kar sawal puche
-    const { threadID, messageID } = event;
-    if (!args[0]) return api.sendMessage("Jee farmaiye, main apki kya madad kar sakta hoon? 😊", threadID, messageID);
-    
-    // Yahan handleEvent ko call karne ki zaroorat nahi, niche wala function handle karega.
-};
+module.exports.run = () => {};
 
 module.exports.handleEvent = async function ({ api, event }) {
+
   const { threadID, messageID, senderID, body, messageReply } = event;
   if (!body) return;
 
   const text = body.toLowerCase().trim();
 
-  // Trigger Logic
-  const isBotCall = text.startsWith("bot ");
-  const isExactAI = text === "jani" || text === "sweetu" || text === "kaise ho";
-  const isReplyToBot = messageReply && messageReply.senderID === api.getCurrentUserID();
+  // ✅ STRICT TRIGGERS
+  const botWithText = text.startsWith("bot ");
+  const exactAI =
+    text === "sweetu" ||
+    text === "jani" ||
+    text === "baby";
 
-  if (!isBotCall && !isExactAI && !isReplyToBot) return;
+  const replyToBot =
+    messageReply &&
+    messageReply.senderID === api.getCurrentUserID();
 
-  const userQuery = isBotCall ? body.slice(4).trim() : body;
+  if (!botWithText && !exactAI && !replyToBot) return;
 
-  // History Management (To remember context)
+  const userMessage = botWithText ? body.slice(4).trim() : body;
+
   if (!history[senderID]) history[senderID] = [];
-  
-  api.setMessageReaction("🎧,🌏", messageID, () => {}, true);
+  history[senderID].push(`User: ${userMessage}`);
+  if (history[senderID].length > 5) history[senderID].shift();
+
+  const finalPrompt = systemPrompt + "\n" + history[senderID].join("\n");
+
+  api.setMessageReaction("🎧", messageID, () => {}, true);
 
   try {
-    // Prepare Messages for API
-    const messages = [
-      { role: "system", content: SYSTEM_INSTRUCTIONS },
-      ...history[senderID],
-      { role: "user", content: userQuery }
-    ];
-
     const response = await axios.post(
       "https://api.groq.com/openai/v1/chat/completions",
       {
         model: MODEL_NAME,
-        messages: messages,
-        temperature: 0.7, // Sahi balance for intelligence
-        max_tokens: 800   // Lambe jawab ke liye space
+        messages: [
+          { role: "system", content: "You are a loving, romantic AI." },
+          { role: "user", content: finalPrompt }
+        ],
+        temperature: 0.8,
+        max_tokens: 120
       },
       {
         headers: {
@@ -100,18 +107,22 @@ module.exports.handleEvent = async function ({ api, event }) {
       }
     );
 
-    const aiReply = response.data.choices[0].message.content;
+    const reply =
+      response.data.choices?.[0]?.message?.content ||
+      "Hmm kuch samajh nahi aaya.";
 
-    // Save to history (Limit to last 10 messages)
-    history[senderID].push({ role: "user", content: userQuery });
-    history[senderID].push({ role: "assistant", content: aiReply });
-    if (history[senderID].length > 10) history[senderID].splice(0, 2);
+    history[senderID].push(`Bot: ${reply}`);
 
-    api.sendMessage(aiReply, threadID, messageID);
-    api.setMessageReaction("🎧", messageID, () => {}, true);
+    api.sendMessage(reply, threadID, messageID);
+    api.setMessageReaction("🌚", messageID, () => {}, true);
 
   } catch (err) {
-    console.error("Groq Error:", err.response?.data || err.message);
-    api.sendMessage("Maaf kijiyega, server mein kuch masla aa raha hai. Thodi der baad koshish karen. 🙏", threadID, messageID);
+    console.log("Groq API Error:", err.response?.data || err.message);
+    api.sendMessage(
+      "Waiit System May Kuch Problem A Gaii hy Boss Chek Kry Gy ❤️",
+      threadID,
+      messageID
+    );
+    api.setMessageReaction("❌", messageID, () => {}, true);
   }
 };
