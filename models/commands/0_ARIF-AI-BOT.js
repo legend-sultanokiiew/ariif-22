@@ -28,7 +28,7 @@ if (module.exports.config.credits !== CREATOR_LOCK) {
 }
 
 // 🔑 GROQ CONFIG
-const GROQ_API_KEY = "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";
+const GROQ_API_KEY = "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";
 const MODEL_NAME = "llama-3.3-70b-versatile";
 
 // Chat history
@@ -46,7 +46,7 @@ Golden Rules (kabhi mat todna):
 • Har message ka jawab dena 😇
 • har sawal bat ka soch samjh kr jawab dena kuch ziyada ni bolna jo jawab hy bs wahi.
 • Tone soft aur pyara hona chahiye 💞
-• Reply sirf 1–2 lines ka ho, emojis zarur use karo 🙂❤️😌
+• Reply sirf 3–5 lines ka ho, emojis zarur use karo 🙂❤️😌
 • Shayari, jokes, flirting aur emotional support situation ke hisaab se dena 😏💖
 • Msg Start May "Dear" Ka Use Krna .
 •koi buri trah pesh aay to asi zaban may jawab dena.
